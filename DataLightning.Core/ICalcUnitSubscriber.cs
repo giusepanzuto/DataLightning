@@ -2,6 +2,6 @@
 {
     public interface ICalcUnitSubscriber<T>
     {
-        void OnNext(T value);
+        void Submit(T value);
     }
 }

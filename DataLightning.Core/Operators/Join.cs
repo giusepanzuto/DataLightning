@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DataLightning.Core.Operators
 {
@@ -12,7 +13,7 @@ namespace DataLightning.Core.Operators
         {
         }
 
-        public Join(object leftInput, object rightInput, Func<TLeftInput, object> leftKeyGetter, Func<TRightInput, object> rightKeyGetter) : base(new[] { leftInput, rightInput })
+        public Join(object leftInput, object rightInput, Func<TLeftInput, object> leftKeyGetter, Func<TRightInput, object> rightKeyGetter) : base(new[] { AdaptInput<TLeftInput>(leftInput), AdaptInput<TRightInput>(rightInput) })
         {
             _left = (Key: leftInput, KeyGetter: leftKeyGetter, Data: new Dictionary<object, List<TLeftInput>>());
             _right = (Key: rightInput, KeyGetter: rightKeyGetter, Data: new Dictionary<object, List<TRightInput>>());
@@ -25,7 +26,7 @@ namespace DataLightning.Core.Operators
 
             object key;
 
-            if (changedInput == _left.Key)
+            if (changedInput == _left.Key || (changedInput is SubscriberAdapter<TLeftInput, object> leftAdapter && leftAdapter.Adaptee == _left.Key))
             {
                 TLeftInput leftInput = (TLeftInput)args[changedInput];
                 key = _left.KeyGetter(leftInput);
@@ -34,11 +35,11 @@ namespace DataLightning.Core.Operators
                 _left.Data[key].Add(leftInput);
 
                 if (_right.Data.ContainsKey(key))
-                    return (_left.Data[key], _right.Data[key]);
+                    return (_left.Data[key].ToList(), _right.Data[key].ToList());
 
-                return (_left.Data[key], new List<TRightInput>());
+                return (_left.Data[key].ToList(), new List<TRightInput>());
             }
-            else
+            else if (changedInput == _right.Key || (changedInput is SubscriberAdapter<TRightInput, object> rightAdapter && rightAdapter.Adaptee == _right.Key))
             {
                 TRightInput rightInput = (TRightInput)args[changedInput];
                 key = _right.KeyGetter(rightInput);
@@ -47,10 +48,20 @@ namespace DataLightning.Core.Operators
                 _right.Data[key].Add(rightInput);
 
                 if (_left.Data.ContainsKey(key))
-                    return (_left.Data[key], _right.Data[key]);
+                    return (_left.Data[key].ToList(), _right.Data[key].ToList());
 
-                return (new List<TLeftInput>(), _right.Data[key]);
+                return (new List<TLeftInput>(), _right.Data[key].ToList());
             }
+            else
+                throw new ArgumentException();
+        }
+
+        private static object AdaptInput<T>(object input)
+        {
+            if (input is ISubscribable<T> s)
+                return new SubscriberAdapter<T, object>(s);
+
+            return input;
         }
     }
 }

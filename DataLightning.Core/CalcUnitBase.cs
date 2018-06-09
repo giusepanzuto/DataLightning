@@ -42,7 +42,7 @@ namespace DataLightning.Core
                 _outputValue = result;
 
                 foreach (var s in _subscribers)
-                    s.OnNext(_outputValue);
+                    s.Submit(_outputValue);
             }
         }
 

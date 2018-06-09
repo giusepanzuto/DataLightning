@@ -33,14 +33,14 @@ namespace DataLightning.Core.Tests.Unit
             object result = null;
             var subscriptorMock = new Mock<ICalcUnitSubscriber<int>>();
             subscriptorMock
-                .Setup(s => s.OnNext(It.IsAny<int>()))
+                .Setup(s => s.Submit(It.IsAny<int>()))
                 .Callback<object>(value => result = value);
 
             _sut.Subscribe(subscriptorMock.Object);
 
-            _sut.Inputs[1].OnNext(2);
-            _sut.Inputs[2].OnNext(3);
-            _sut.Inputs[3].OnNext(5);
+            _sut.Inputs[1].Submit(2);
+            _sut.Inputs[2].Submit(3);
+            _sut.Inputs[3].Submit(5);
 
             Assert.Equal(10, result);
         }
@@ -52,9 +52,9 @@ namespace DataLightning.Core.Tests.Unit
 
             _sut.Subscribe(subscriptorMock.Object);
 
-            _sut.Inputs[1].OnNext(1);
+            _sut.Inputs[1].Submit(1);
 
-            subscriptorMock.Verify(s => s.OnNext(It.IsAny<int>()), Times.Once);
+            subscriptorMock.Verify(s => s.Submit(It.IsAny<int>()), Times.Once);
         }
 
         [Fact]
@@ -64,12 +64,12 @@ namespace DataLightning.Core.Tests.Unit
 
             _sut.Subscribe(subscriptorMock.Object);
 
-            _sut.Inputs[1].OnNext(1);
+            _sut.Inputs[1].Submit(1);
 
-            _sut.Inputs[1].OnNext(1);
-            _sut.Inputs[1].OnNext(1);
+            _sut.Inputs[1].Submit(1);
+            _sut.Inputs[1].Submit(1);
 
-            subscriptorMock.Verify(s => s.OnNext(It.IsAny<int>()), Times.Once);
+            subscriptorMock.Verify(s => s.Submit(It.IsAny<int>()), Times.Once);
         }
 
 
