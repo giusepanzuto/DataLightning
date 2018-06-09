@@ -1,29 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace DataLightning.Core
 {
-    public class CalcUnit : ICalcUnit
+    public abstract class CalcUnitBase : ICalcUnit
     {
-        private readonly Func<IDictionary<object, object>, object> _function;
         private readonly Dictionary<object, IInput> _inputs = new Dictionary<object, IInput>();
         private readonly IList<ICalcUnitSubscriber> _subscribers = new List<ICalcUnitSubscriber>();
         private object _outputValue;
 
-        public CalcUnit(IEnumerable<object> inputKeys, Func<IDictionary<object, object>, object> function)
+        protected CalcUnitBase(IEnumerable<object> inputKeys)
         {
             foreach (var key in inputKeys)
             {
-                var input = new Input();
+                var input = new Input(key);
                 input.Changed += Input_Changed;
                 _inputs[key] = input;
+
                 if (key is ICalcUnit c)
                     c.Subscribe(input);
             }
-
-            _function = function;
         }
 
         public IReadOnlyDictionary<object, IInput> Inputs => new ReadOnlyDictionary<object, IInput>(_inputs);
@@ -34,11 +31,11 @@ namespace DataLightning.Core
             return new Subscription(_subscribers, subscriptor);
         }
 
-        private void Calculate()
+        private void Calculate(object inputKey)
         {
             var args = _inputs.Keys.ToDictionary(k => k, k => _inputs[k].Value);
 
-            var result = _function(args);
+            var result = Execute(args, inputKey);
 
             if (!Equals(result, _outputValue))
             {
@@ -49,9 +46,11 @@ namespace DataLightning.Core
             }
         }
 
+        protected abstract object Execute(IDictionary<object, object> args, object changedInput);
+
         private void Input_Changed(object sender, System.EventArgs e)
         {
-            Calculate();
+            Calculate(((IInput)sender).Key);
         }
     }
 }

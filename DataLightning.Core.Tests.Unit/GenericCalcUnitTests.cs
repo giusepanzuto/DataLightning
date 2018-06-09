@@ -4,13 +4,13 @@ using Xunit;
 
 namespace DataLightning.Core.Tests.Unit
 {
-    public class CalcUnitTests
+    public class GenericCalcUnitTests
     {
-        private readonly CalcUnit _sut;
+        private readonly GenericCalcUnit _sut;
 
-        public CalcUnitTests()
+        public GenericCalcUnitTests()
         {
-            _sut = new CalcUnit(new object[] { 1, 2, 3 },
+            _sut = new GenericCalcUnit(new object[] { 1, 2, 3 },
                 args => args.Values.Cast<int?>().Sum());
         }
 

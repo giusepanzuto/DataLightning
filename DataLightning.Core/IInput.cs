@@ -3,5 +3,6 @@
     public interface IInput : ICalcUnitSubscriber
     {
         object Value { get; }
+        object Key { get; }
     }
 }
