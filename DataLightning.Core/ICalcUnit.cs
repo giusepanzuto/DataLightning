@@ -2,10 +2,8 @@
 
 namespace DataLightning.Core
 {
-    public interface ICalcUnit
+    public interface ICalcUnit<TInput, TOutput> : ISubscribable<TOutput>
     {
-        IReadOnlyDictionary<object, IInput> Inputs { get; }
-
-        ISubscription Subscribe(ICalcUnitSubscriber subscriptor);
+        IReadOnlyDictionary<object, IInput<TInput>> Inputs { get; }
     }
 }

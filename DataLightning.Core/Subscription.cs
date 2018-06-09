@@ -2,12 +2,12 @@
 
 namespace DataLightning.Core
 {
-    public class Subscription : ISubscription
+    public class Subscription<T> : ISubscription
     {
-        private readonly IList<ICalcUnitSubscriber> _subscribers;
-        private readonly ICalcUnitSubscriber _subscriber;
+        private readonly IList<ICalcUnitSubscriber<T>> _subscribers;
+        private readonly ICalcUnitSubscriber<T> _subscriber;
 
-        public Subscription(IList<ICalcUnitSubscriber> subscribers, ICalcUnitSubscriber subscriber)
+        public Subscription(IList<ICalcUnitSubscriber<T>> subscribers, ICalcUnitSubscriber<T> subscriber)
         {
             _subscribers = subscribers;
             _subscriber = subscriber;

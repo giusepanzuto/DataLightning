@@ -1,7 +1,7 @@
 ﻿namespace DataLightning.Core
 {
-    public interface ICalcUnitSubscriber
+    public interface ICalcUnitSubscriber<T>
     {
-        void OnNext(object value);
+        void OnNext(T value);
     }
 }

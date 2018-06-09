@@ -3,16 +3,16 @@ using System.Collections.Generic;
 
 namespace DataLightning.Core
 {
-    public class GenericCalcUnit : CalcUnitBase
+    public class GenericCalcUnit<TInput, TOutput> : CalcUnitBase<TInput, TOutput>
     {
-        private readonly Func<IDictionary<object, object>, object> _function;
+        private readonly Func<IDictionary<object, TInput>, TOutput> _function;
 
-        public GenericCalcUnit(IEnumerable<object> inputKeys, Func<IDictionary<object, object>, object> function) : base(inputKeys)
+        public GenericCalcUnit(IEnumerable<object> inputKeys, Func<IDictionary<object, TInput>, TOutput> function) : base(inputKeys)
         {
             _function = function;
         }
 
-        protected override object Execute(IDictionary<object, object> args, object changedInput) =>
+        protected override TOutput Execute(IDictionary<object, TInput> args, object changedInput) =>
             _function(args);
     }
 }
