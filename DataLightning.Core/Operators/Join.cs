@@ -4,43 +4,64 @@ using System.Linq;
 
 namespace DataLightning.Core.Operators
 {
-    public class Join : CalcUnitBase
+    public class Join<TLeftInput, TRightInput> : CalcUnitBase<object, (IList<TLeftInput> Left, IList<TRightInput> Right)>
     {
-        private readonly IDictionary<object, (Func<object, object> KeyGetter, IDictionary<object, IList<object>> Data)> _inputConfigs = new Dictionary<object, (Func<object, object> KeyGetter, IDictionary<object, IList<object>> Data)>();
-        private readonly object _leftInput;
-        private readonly object _rightInput;
+        private readonly (object Key, Func<TLeftInput, object> KeyGetter, Dictionary<object, List<TLeftInput>> Data) _left;
+        private readonly (object Key, Func<TRightInput, object> KeyGetter, Dictionary<object, List<TRightInput>> Data) _right;
 
-        public Join(Func<object, object> leftKeyGetter, Func<object, object> rightKeyGetter): this("left", "right", leftKeyGetter, rightKeyGetter)
+        public Join(Func<TLeftInput, object> leftKeyGetter, Func<TRightInput, object> rightKeyGetter) : this("left", "right", leftKeyGetter, rightKeyGetter)
         {
-
         }
 
-        public Join(object leftInput, object rightInput, Func<object, object> leftKeyGetter, Func<object, object> rightKeyGetter) : base(new[] { leftInput, rightInput })
+        public Join(object leftInput, object rightInput, Func<TLeftInput, object> leftKeyGetter, Func<TRightInput, object> rightKeyGetter) : base(new[] { AdaptInput<TLeftInput>(leftInput), AdaptInput<TRightInput>(rightInput) })
         {
-            _inputConfigs[leftInput] = (leftKeyGetter, new Dictionary<object, IList<object>>());
-            _inputConfigs[rightInput] = (rightKeyGetter, new Dictionary<object, IList<object>>());
-            _leftInput = leftInput;
-            _rightInput = rightInput;
+            _left = (Key: leftInput, KeyGetter: leftKeyGetter, Data: new Dictionary<object, List<TLeftInput>>());
+            _right = (Key: rightInput, KeyGetter: rightKeyGetter, Data: new Dictionary<object, List<TRightInput>>());
         }
 
-        protected override object Execute(IDictionary<object, object> args, object changedInput)
+        protected override (IList<TLeftInput> Left, IList<TRightInput> Right) Execute(IDictionary<object, object> args, object changedInput)
         {
             if (args[changedInput] == null)
-                return null;
+                return (new List<TLeftInput>(), new List<TRightInput>());
 
-            var (KeyGetter, Data) = _inputConfigs[changedInput];
-            var key = KeyGetter(args[changedInput]);
+            object key;
 
-            if (!_inputConfigs[changedInput].Data.ContainsKey(key))
-                _inputConfigs[changedInput].Data[key] = new List<object>();
+            if (changedInput == _left.Key || (changedInput is SubscriberAdapter<TLeftInput, object> leftAdapter && leftAdapter.Adaptee == _left.Key))
+            {
+                TLeftInput leftInput = (TLeftInput)args[changedInput];
+                key = _left.KeyGetter(leftInput);
+                if (!_left.Data.ContainsKey(key))
+                    _left.Data[key] = new List<TLeftInput>();
+                _left.Data[key].Add(leftInput);
 
-            if (!_inputConfigs[changedInput].Data[key].Contains(args[changedInput]))
-                _inputConfigs[changedInput].Data[key].Add(args[changedInput]);
+                if (_right.Data.ContainsKey(key))
+                    return (_left.Data[key].ToList(), _right.Data[key].ToList());
 
-            if (_inputConfigs.Values.Any(i => !i.Data.ContainsKey(key)))
-                return null;
+                return (_left.Data[key].ToList(), new List<TRightInput>());
+            }
+            else if (changedInput == _right.Key || (changedInput is SubscriberAdapter<TRightInput, object> rightAdapter && rightAdapter.Adaptee == _right.Key))
+            {
+                TRightInput rightInput = (TRightInput)args[changedInput];
+                key = _right.KeyGetter(rightInput);
+                if (!_right.Data.ContainsKey(key))
+                    _right.Data[key] = new List<TRightInput>();
+                _right.Data[key].Add(rightInput);
 
-            return _inputConfigs.Keys.ToDictionary(k => k, k => _inputConfigs[k].Data[key]);
+                if (_left.Data.ContainsKey(key))
+                    return (_left.Data[key].ToList(), _right.Data[key].ToList());
+
+                return (new List<TLeftInput>(), _right.Data[key].ToList());
+            }
+            else
+                throw new ArgumentException();
+        }
+
+        private static object AdaptInput<T>(object input)
+        {
+            if (input is ISubscribable<T> s)
+                return new SubscriberAdapter<T, object>(s);
+
+            return input;
         }
     }
 }

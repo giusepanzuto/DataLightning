@@ -2,7 +2,7 @@
 
 namespace DataLightning.Core
 {
-    public class Input : IInput
+    public class Input<T> : IInput<T>
     {
         public event EventHandler Changed;
 
@@ -11,7 +11,7 @@ namespace DataLightning.Core
             Key = key;
         }
 
-        public void OnNext(object value)
+        public void Submit(T value)
         {
             Value = value;
             Changed?.Invoke(this, EventArgs.Empty);
@@ -19,6 +19,6 @@ namespace DataLightning.Core
 
         public object Key { get; }
 
-        public object Value { get; private set; }
+        public T Value { get; private set; }
     }
 }

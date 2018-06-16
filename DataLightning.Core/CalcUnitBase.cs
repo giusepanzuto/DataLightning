@@ -4,31 +4,31 @@ using System.Linq;
 
 namespace DataLightning.Core
 {
-    public abstract class CalcUnitBase : ICalcUnit
+    public abstract class CalcUnitBase<TInput, TOutput> : ICalcUnit<TInput, TOutput>
     {
-        private readonly Dictionary<object, IInput> _inputs = new Dictionary<object, IInput>();
-        private readonly IList<ICalcUnitSubscriber> _subscribers = new List<ICalcUnitSubscriber>();
-        private object _outputValue;
+        private readonly Dictionary<object, IInput<TInput>> _inputs = new Dictionary<object, IInput<TInput>>();
+        private readonly IList<ICalcUnitSubscriber<TOutput>> _subscribers = new List<ICalcUnitSubscriber<TOutput>>();
+        private TOutput _outputValue;
 
         protected CalcUnitBase(IEnumerable<object> inputKeys)
         {
             foreach (var key in inputKeys)
             {
-                var input = new Input(key);
+                var input = new Input<TInput>(key);
                 input.Changed += Input_Changed;
                 _inputs[key] = input;
 
-                if (key is ICalcUnit c)
+                if (key is ISubscribable<TInput> c)
                     c.Subscribe(input);
             }
         }
 
-        public IReadOnlyDictionary<object, IInput> Inputs => new ReadOnlyDictionary<object, IInput>(_inputs);
+        public IReadOnlyDictionary<object, IInput<TInput>> Inputs => new ReadOnlyDictionary<object, IInput<TInput>>(_inputs);
 
-        public ISubscription Subscribe(ICalcUnitSubscriber subscriptor)
+        public ISubscription Subscribe(ICalcUnitSubscriber<TOutput> subscriptor)
         {
             _subscribers.Add(subscriptor);
-            return new Subscription(_subscribers, subscriptor);
+            return new Subscription<TOutput>(_subscribers, subscriptor);
         }
 
         private void Calculate(object inputKey)
@@ -42,15 +42,15 @@ namespace DataLightning.Core
                 _outputValue = result;
 
                 foreach (var s in _subscribers)
-                    s.OnNext(_outputValue);
+                    s.Submit(_outputValue);
             }
         }
 
-        protected abstract object Execute(IDictionary<object, object> args, object changedInput);
+        protected abstract TOutput Execute(IDictionary<object, TInput> args, object changedInput);
 
         private void Input_Changed(object sender, System.EventArgs e)
         {
-            Calculate(((IInput)sender).Key);
+            Calculate(((IInput<TInput>)sender).Key);
         }
     }
 }

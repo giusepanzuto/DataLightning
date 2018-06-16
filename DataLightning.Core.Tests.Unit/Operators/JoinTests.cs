@@ -1,57 +1,39 @@
 ﻿using DataLightning.Core.Operators;
 using Moq;
-using System;
 using System.Collections.Generic;
-using System.Text;
 using Xunit;
 
 namespace DataLightning.Core.Tests.Unit.Operators
 {
     public class JoinTests
     {
-        private readonly Join _sut;
+        private readonly Join<TestEntityA, TestEntityB> _sut;
 
         public JoinTests()
         {
-            _sut = new Join(
-                value => ((TestEntityA)value).Key,
-                value => ((TestEntityB)value).Key);
+            _sut = new Join<TestEntityA, TestEntityB>(
+                value => value.KeyA,
+                value => value.KeyB);
         }
 
         [Fact]
         public void ShouldReturnMatchedElements()
         {
-            object result = null;
-            var subscriberMock = new Mock<ICalcUnitSubscriber>();
-            subscriberMock.Setup(s => s.OnNext(It.IsAny<object>()))
-                .Callback<object>(value => result = value);
+            (IList<TestEntityA>, IList<TestEntityB>) result = (null, null);
+            var subscriberMock = new Mock<ICalcUnitSubscriber<(IList<TestEntityA>, IList<TestEntityB>)>>();
+            subscriberMock.Setup(s => s.Submit(It.IsAny<(IList<TestEntityA>, IList<TestEntityB>)>()))
+                .Callback<(IList<TestEntityA>, IList<TestEntityB>)>(value => result = value);
             _sut.Subscribe(subscriberMock.Object);
 
-            TestEntityA value1 = new TestEntityA { Key = 1, Value1 = "A" };
-            _sut.Inputs["left"].OnNext(value1);
-            TestEntityB value2 = new TestEntityB { Key = 1, Value1 = "B", Value2 = "B" };
-            _sut.Inputs["right"].OnNext(value2);
+            TestEntityA value1 = new TestEntityA { KeyA = 1, Value1 = "A" };
+            _sut.Inputs["left"].Submit(value1);
+            TestEntityB value2 = new TestEntityB { KeyB = 1, Value1 = "B", Value2 = "B" };
+            _sut.Inputs["right"].Submit(value2);
 
-            var expected = new Dictionary<object, IEnumerable<object>>
-            {
-                ["left"] = new[] { value1 },
-                ["right"] = new[] { value2 }
-            };
+            var expected = (new List<TestEntityA> { value1 }, new List<TestEntityB> { value2 });
 
-            Assert.Equal(expected, result);
-        }
-
-        private class TestEntityA
-        {
-            public int Key { get; set; }
-            public string Value1 { get; set; }
-        }
-
-        private class TestEntityB
-        {
-            public int Key { get; set; }
-            public string Value1 { get; set; }
-            public string Value2 { get; set; }
+            Assert.Equal(expected.Item1, result.Item1);
+            Assert.Equal(expected.Item2, result.Item2);
         }
     }
 }
