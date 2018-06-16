@@ -12,7 +12,7 @@ namespace DataLightning.Core
             return new Subscription<T>(_subscribers, subscriptor);
         }
 
-        protected void PushToSubscribers(T value)
+        protected void PushToSubscribed(T value)
         {
             foreach (var s in _subscribers)
                 s.Push(value);

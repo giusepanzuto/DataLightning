@@ -4,7 +4,7 @@
     {
         public void Push(T value)
         {
-            PushToSubscribers(value);
+            PushToSubscribed(value);
         }
     }
 }

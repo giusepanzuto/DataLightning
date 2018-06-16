@@ -29,7 +29,7 @@ namespace DataLightning.Core
             {
                 _outputValue = result;
 
-                PushToSubscribers(_outputValue);
+                PushToSubscribed(_outputValue);
             }
         }
 
