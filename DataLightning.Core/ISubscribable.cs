@@ -2,6 +2,6 @@
 {
     public interface ISubscribable<T>
     {
-        ISubscription Subscribe(ICalcUnitSubscriber<T> subscriptor);
+        ISubscription Subscribe(ISubscriber<T> subscriptor);
     }
 }

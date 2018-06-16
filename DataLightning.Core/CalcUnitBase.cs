@@ -1,34 +1,22 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace DataLightning.Core
 {
-    public abstract class CalcUnitBase<TInput, TOutput> : ICalcUnit<TInput, TOutput>
+    public abstract class CalcUnitBase<TInput, TOutput> : SubscribableBase<TOutput>
     {
         private readonly Dictionary<object, IInput<TInput>> _inputs = new Dictionary<object, IInput<TInput>>();
-        private readonly IList<ICalcUnitSubscriber<TOutput>> _subscribers = new List<ICalcUnitSubscriber<TOutput>>();
         private TOutput _outputValue;
 
-        protected CalcUnitBase(IEnumerable<object> inputKeys)
+        protected CalcUnitBase(IEnumerable<ISubscribable<TInput>> inputKeys)
         {
             foreach (var key in inputKeys)
             {
                 var input = new Input<TInput>(key);
                 input.Changed += Input_Changed;
                 _inputs[key] = input;
-
-                if (key is ISubscribable<TInput> c)
-                    c.Subscribe(input);
+                key.Subscribe(input);
             }
-        }
-
-        public IReadOnlyDictionary<object, IInput<TInput>> Inputs => new ReadOnlyDictionary<object, IInput<TInput>>(_inputs);
-
-        public ISubscription Subscribe(ICalcUnitSubscriber<TOutput> subscriptor)
-        {
-            _subscribers.Add(subscriptor);
-            return new Subscription<TOutput>(_subscribers, subscriptor);
         }
 
         private void Calculate(object inputKey)
@@ -41,8 +29,7 @@ namespace DataLightning.Core
             {
                 _outputValue = result;
 
-                foreach (var s in _subscribers)
-                    s.Submit(_outputValue);
+                PushToSubscribers(_outputValue);
             }
         }
 

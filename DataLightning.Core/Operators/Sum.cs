@@ -5,7 +5,7 @@ namespace DataLightning.Core.Operators
 {
     public class Sum : CalcUnitBase<decimal, decimal>
     {
-        public Sum(IEnumerable<object> inputKeys) : base(inputKeys)
+        public Sum(IEnumerable<ISubscribable<decimal>> inputKeys) : base(inputKeys)
         {
         }
 

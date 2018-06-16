@@ -7,7 +7,7 @@ namespace DataLightning.Core
     {
         private readonly Func<IDictionary<object, TInput>, TOutput> _function;
 
-        public GenericCalcUnit(IEnumerable<object> inputKeys, Func<IDictionary<object, TInput>, TOutput> function) : base(inputKeys)
+        public GenericCalcUnit(Func<IDictionary<object, TInput>, TOutput> function, params ISubscribable<TInput>[] inputKeys) : base(inputKeys)
         {
             _function = function;
         }

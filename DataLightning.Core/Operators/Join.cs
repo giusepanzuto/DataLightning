@@ -9,11 +9,10 @@ namespace DataLightning.Core.Operators
         private readonly (object Key, Func<TLeftInput, object> KeyGetter, Dictionary<object, List<TLeftInput>> Data) _left;
         private readonly (object Key, Func<TRightInput, object> KeyGetter, Dictionary<object, List<TRightInput>> Data) _right;
 
-        public Join(Func<TLeftInput, object> leftKeyGetter, Func<TRightInput, object> rightKeyGetter) : this("left", "right", leftKeyGetter, rightKeyGetter)
-        {
-        }
-
-        public Join(object leftInput, object rightInput, Func<TLeftInput, object> leftKeyGetter, Func<TRightInput, object> rightKeyGetter) : base(new[] { AdaptInput<TLeftInput>(leftInput), AdaptInput<TRightInput>(rightInput) })
+        public Join(ISubscribable<TLeftInput> leftInput, ISubscribable<TRightInput> rightInput, Func<TLeftInput, object> leftKeyGetter, Func<TRightInput, object> rightKeyGetter) :
+            base(new ISubscribable<object>[] {
+                new SubscriberAdapter<TLeftInput, object>(leftInput),
+                new SubscriberAdapter<TRightInput, object>(rightInput) })
         {
             _left = (Key: leftInput, KeyGetter: leftKeyGetter, Data: new Dictionary<object, List<TLeftInput>>());
             _right = (Key: rightInput, KeyGetter: rightKeyGetter, Data: new Dictionary<object, List<TRightInput>>());
@@ -54,14 +53,6 @@ namespace DataLightning.Core.Operators
             }
             else
                 throw new ArgumentException();
-        }
-
-        private static object AdaptInput<T>(object input)
-        {
-            if (input is ISubscribable<T> s)
-                return new SubscriberAdapter<T, object>(s);
-
-            return input;
         }
     }
 }

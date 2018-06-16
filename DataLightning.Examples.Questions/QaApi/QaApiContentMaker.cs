@@ -7,7 +7,7 @@ namespace DataLightning.Examples.Questions
 {
     public class QaApiContentMaker : CalcUnitBase<(IList<Question>, IList<Answer>), QaApiContent>
     {
-        public QaApiContentMaker(object input) : base(new[] { input })
+        public QaApiContentMaker(ISubscribable<(IList<Question>, IList<Answer>)> input) : base(new[] { input })
         {
         }
 

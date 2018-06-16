@@ -2,7 +2,7 @@
 
 namespace DataLightning.Core
 {
-    public class CallbackSubcriber<T> : ICalcUnitSubscriber<T>
+    public class CallbackSubcriber<T> : ISubscriber<T>
     {
         private readonly Action<T> _callback;
 
@@ -11,7 +11,7 @@ namespace DataLightning.Core
             _callback = callback;
         }
 
-        public void Submit(T value)
+        public void Push(T value)
         {
             _callback(value);
         }

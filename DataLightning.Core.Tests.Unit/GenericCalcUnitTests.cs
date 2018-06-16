@@ -1,3 +1,4 @@
+using DataLightning.Core.Operators;
 using Moq;
 using System.Linq;
 using Xunit;
@@ -7,40 +8,34 @@ namespace DataLightning.Core.Tests.Unit
     public class GenericCalcUnitTests
     {
         private readonly GenericCalcUnit<int, int> _sut;
+        private readonly PassThroughUnit<int> _input1;
+        private readonly PassThroughUnit<int> _input2;
+        private readonly PassThroughUnit<int> _input3;
 
         public GenericCalcUnitTests()
         {
-            _sut = new GenericCalcUnit<int, int>(new object[] { 1, 2, 3 },
-                args => args.Values.Sum());
-        }
+            _input1 = new PassThroughUnit<int>();
+            _input2 = new PassThroughUnit<int>();
+            _input3 = new PassThroughUnit<int>();
 
-        [Fact]
-        public void ShouldContainsNotNullInput()
-        {
-            foreach (var input in _sut.Inputs.Values)
-                Assert.NotNull(input);
-        }
-
-        [Fact]
-        public void ShouldHaveTheCorrectNumberOfInput()
-        {
-            Assert.Equal(3, _sut.Inputs.Count);
+            _sut = new GenericCalcUnit<int, int>(args => args.Values.Sum(),
+                _input1, _input2, _input3);
         }
 
         [Fact]
         public void ShouldNotifyTheCorrectResultToSubscriber()
         {
             object result = null;
-            var subscriptorMock = new Mock<ICalcUnitSubscriber<int>>();
+            var subscriptorMock = new Mock<ISubscriber<int>>();
             subscriptorMock
-                .Setup(s => s.Submit(It.IsAny<int>()))
+                .Setup(s => s.Push(It.IsAny<int>()))
                 .Callback<object>(value => result = value);
 
             _sut.Subscribe(subscriptorMock.Object);
 
-            _sut.Inputs[1].Submit(2);
-            _sut.Inputs[2].Submit(3);
-            _sut.Inputs[3].Submit(5);
+            _input1.Push(2);
+            _input2.Push(3);
+            _input3.Push(5);
 
             Assert.Equal(10, result);
         }
@@ -48,35 +43,35 @@ namespace DataLightning.Core.Tests.Unit
         [Fact]
         public void ShouldNotifyTheResultToSubscriber()
         {
-            var subscriptorMock = new Mock<ICalcUnitSubscriber<int>>();
+            var subscriptorMock = new Mock<ISubscriber<int>>();
 
             _sut.Subscribe(subscriptorMock.Object);
 
-            _sut.Inputs[1].Submit(1);
+            _input1.Push(1);
 
-            subscriptorMock.Verify(s => s.Submit(It.IsAny<int>()), Times.Once);
+            subscriptorMock.Verify(s => s.Push(It.IsAny<int>()), Times.Once);
         }
 
         [Fact]
         public void ShouldNotNotifyTheResultToSubscriberIfResultIsNotChanged()
         {
-            var subscriptorMock = new Mock<ICalcUnitSubscriber<int>>();
+            var subscriptorMock = new Mock<ISubscriber<int>>();
 
             _sut.Subscribe(subscriptorMock.Object);
 
-            _sut.Inputs[1].Submit(1);
+            _input1.Push(1);
 
-            _sut.Inputs[1].Submit(1);
-            _sut.Inputs[1].Submit(1);
+            _input1.Push(1);
+            _input1.Push(1);
 
-            subscriptorMock.Verify(s => s.Submit(It.IsAny<int>()), Times.Once);
+            subscriptorMock.Verify(s => s.Push(It.IsAny<int>()), Times.Once);
         }
 
 
         [Fact]
         public void ShouldReturnASubscriptionOnSubscribe()
         {
-            var subscriptorMock = new Mock<ICalcUnitSubscriber<int>>();
+            var subscriptorMock = new Mock<ISubscriber<int>>();
             var result = _sut.Subscribe(subscriptorMock.Object);
 
             Assert.NotNull(result);

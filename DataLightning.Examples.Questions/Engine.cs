@@ -23,16 +23,32 @@ namespace DataLightning.Examples.Questions
             _answers = new PassThroughUnit<Answer>();
             _users = new PassThroughUnit<User>();
 
-            var qaJoin = new Join<Question, Answer>(_questions, _answers, q => q.Id, a => a.QuestionId);
-
-            var uqJoin = new Join<User, Question>(_users, _questions, u => u.Id, q => q.UserId);
-            var uaJoin = new Join<User, Answer>(_users, _answers, u => u.Id, a => a.UserId);
-
             _questions.Subscribe(new CallbackSubcriber<Question>(q => _maxQuestionId = Math.Max(_maxQuestionId, q.Id)));
             _answers.Subscribe(new CallbackSubcriber<Answer>(a => _maxAnswerId = Math.Max(_maxAnswerId, a.Id)));
             _users.Subscribe(new CallbackSubcriber<User>(u => _maxUserId = Math.Max(_maxUserId, u.Id)));
 
+            var qaJoin = new Join<Question, Answer>(_questions, _answers, q => q.Id, a => a.QuestionId);
             new QaApiContentMaker(qaJoin).Subscribe(new CallbackSubcriber<QaApiContent>(qaApiPublisher.Publish));
+
+            var userStatistics = new MultiJoin(
+                new JoinDefinitionAdapter<User>(_users, "User", u => u.Id),
+                new JoinDefinitionAdapter<Question>(_questions, "Questions", q => q.UserId),
+                new JoinDefinitionAdapter<Answer>(_answers, "Answers", a => a.UserId));
+
+            var statMapper = new Mapper<IDictionary<string, IList<object>>, UserStatistic>(userStatistics, data =>
+            {
+                if (!data.ContainsKey("User") || data["User"].Count != 1)
+                    return null;
+
+                return new UserStatistic
+                {
+                    User = (User)data["User"].Single(),
+                    QuestionsCount = data.ContainsKey("Questions") ? data["Questions"].Count : 0,
+                    AnswerCount = data.ContainsKey("Answers") ? data["Answers"].Count : 0
+                };
+            });
+
+            statMapper.Subscribe(new CallbackSubcriber<UserStatistic>(s => s?.ToString()));
         }
 
         public int AddUser(string userName)
@@ -43,7 +59,7 @@ namespace DataLightning.Examples.Questions
                 UserName = userName
             };
 
-            _users.Input.Submit(user);
+            _users.Push(user);
             return user.Id;
         }
 
@@ -56,7 +72,7 @@ namespace DataLightning.Examples.Questions
                 Text = text
             };
 
-            _questions.Input.Submit(question);
+            _questions.Push(question);
             return question.Id;
         }
 
@@ -70,7 +86,7 @@ namespace DataLightning.Examples.Questions
                 Text = text
             };
 
-            _answers.Input.Submit(answer);
+            _answers.Push(answer);
             return answer.Id;
         }
     }

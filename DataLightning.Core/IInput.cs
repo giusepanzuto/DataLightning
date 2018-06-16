@@ -1,6 +1,6 @@
 ﻿namespace DataLightning.Core
 {
-    public interface IInput<T> : ICalcUnitSubscriber<T>
+    public interface IInput<T> : ISubscriber<T>
     {
         object Key { get; }
 

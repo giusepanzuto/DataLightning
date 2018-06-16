@@ -11,7 +11,7 @@ namespace DataLightning.Core
             Key = key;
         }
 
-        public void Submit(T value)
+        public void Push(T value)
         {
             Value = value;
             Changed?.Invoke(this, EventArgs.Empty);

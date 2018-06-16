@@ -33,8 +33,8 @@ namespace DataLightning.Core.Tests.Unit.Operators
         [Fact]
         public void ShouldReturn2EntityMatch()
         {
-            _inputA.Input.Submit(new TestEntityA { KeyA = 1, Value1 = "A1" });
-            _inputB.Input.Submit(new TestEntityB { KeyB = 1, Value1 = "B1" });
+            _inputA.Push(new TestEntityA { KeyA = 1, Value1 = "A1" });
+            _inputB.Push(new TestEntityB { KeyB = 1, Value1 = "B1" });
 
             var expected = new Dictionary<string, IList<object>>
             {
@@ -48,9 +48,9 @@ namespace DataLightning.Core.Tests.Unit.Operators
         [Fact]
         public void ShouldReturn3EntityMatch()
         {
-            _inputA.Input.Submit(new TestEntityA { KeyA = 1, Value1 = "A1" });
-            _inputB.Input.Submit(new TestEntityB { KeyB = 1, Value1 = "B1" });
-            _inputC.Input.Submit(new TestEntityC { KeyC = 1, Value1 = "C1" });
+            _inputA.Push(new TestEntityA { KeyA = 1, Value1 = "A1" });
+            _inputB.Push(new TestEntityB { KeyB = 1, Value1 = "B1" });
+            _inputC.Push(new TestEntityC { KeyC = 1, Value1 = "C1" });
 
             var expected = new Dictionary<string, IList<object>>
             {
@@ -65,10 +65,10 @@ namespace DataLightning.Core.Tests.Unit.Operators
         [Fact]
         public void ShouldDiscardNoMatchingEntities()
         {
-            _inputC.Input.Submit(new TestEntityC { KeyC = 2, Value1 = "C1" });
+            _inputC.Push(new TestEntityC { KeyC = 2, Value1 = "C1" });
 
-            _inputA.Input.Submit(new TestEntityA { KeyA = 1, Value1 = "A1" });
-            _inputB.Input.Submit(new TestEntityB { KeyB = 1, Value1 = "B1" });
+            _inputA.Push(new TestEntityA { KeyA = 1, Value1 = "A1" });
+            _inputB.Push(new TestEntityB { KeyB = 1, Value1 = "B1" });
 
             var expected = new Dictionary<string, IList<object>>
             {
@@ -82,17 +82,17 @@ namespace DataLightning.Core.Tests.Unit.Operators
         [Fact]
         public void ShouldReturn3EntityMatchAndDiscardNoMatchingEntities()
         {
-            _inputA.Input.Submit(new TestEntityA { KeyA = 2, Value1 = "A3" });
-            _inputB.Input.Submit(new TestEntityB { KeyB = 2, Value1 = "B3" });
-            _inputC.Input.Submit(new TestEntityC { KeyC = 2, Value1 = "C3" });
+            _inputA.Push(new TestEntityA { KeyA = 2, Value1 = "A3" });
+            _inputB.Push(new TestEntityB { KeyB = 2, Value1 = "B3" });
+            _inputC.Push(new TestEntityC { KeyC = 2, Value1 = "C3" });
 
-            _inputA.Input.Submit(new TestEntityA { KeyA = 1, Value1 = "A1" });
-            _inputB.Input.Submit(new TestEntityB { KeyB = 1, Value1 = "B1" });
-            _inputC.Input.Submit(new TestEntityC { KeyC = 1, Value1 = "C1" });
+            _inputA.Push(new TestEntityA { KeyA = 1, Value1 = "A1" });
+            _inputB.Push(new TestEntityB { KeyB = 1, Value1 = "B1" });
+            _inputC.Push(new TestEntityC { KeyC = 1, Value1 = "C1" });
 
-            _inputA.Input.Submit(new TestEntityA { KeyA = 1, Value1 = "A2" });
-            _inputB.Input.Submit(new TestEntityB { KeyB = 1, Value1 = "B2" });
-            _inputC.Input.Submit(new TestEntityC { KeyC = 1, Value1 = "C2" });
+            _inputA.Push(new TestEntityA { KeyA = 1, Value1 = "A2" });
+            _inputB.Push(new TestEntityB { KeyB = 1, Value1 = "B2" });
+            _inputC.Push(new TestEntityC { KeyC = 1, Value1 = "C2" });
 
             var expected = new Dictionary<string, IList<object>>
             {

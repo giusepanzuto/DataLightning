@@ -1,13 +1,10 @@
-﻿using System.Linq;
-
-namespace DataLightning.Core.Operators
+﻿namespace DataLightning.Core.Operators
 {
-    public class PassThroughUnit<T> : GenericCalcUnit<T, T>
+    public class PassThroughUnit<T> : SubscribableBase<T>, ISubscriber<T>
     {
-        public PassThroughUnit() : base(new[] { "Input" }, args => args.Values.Single())
+        public void Push(T value)
         {
+            PushToSubscribers(value);
         }
-
-        public IInput<T> Input => Inputs["Input"];
     }
 }
