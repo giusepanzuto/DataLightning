@@ -2,7 +2,7 @@
 
 namespace DataLightning.Examples.Questions.Model
 {
-    public class OutputContent
+    public class QaApiContent
     {
         public string QuestionId { get; set; }
 

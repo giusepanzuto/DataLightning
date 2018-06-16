@@ -5,19 +5,19 @@ using System.Linq;
 
 namespace DataLightning.Examples.Questions
 {
-    public class OutputContentMaker : CalcUnitBase<(IList<Question>, IList<Answer>), OutputContent>
+    public class QaApiContentMaker : CalcUnitBase<(IList<Question>, IList<Answer>), QaApiContent>
     {
-        public OutputContentMaker(object input) : base(new[] { input })
+        public QaApiContentMaker(object input) : base(new[] { input })
         {
         }
 
-        protected override OutputContent Execute(IDictionary<object, (IList<Question>, IList<Answer>)> args, object changedInput)
+        protected override QaApiContent Execute(IDictionary<object, (IList<Question>, IList<Answer>)> args, object changedInput)
         {
             var value = args[changedInput];
 
             Question question = value.Item1.Single();
 
-            return new OutputContent
+            return new QaApiContent
             {
                 QuestionId = question.Id.ToString(),
                 Question = question.Text,

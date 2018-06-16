@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DataLightning.Core
+﻿namespace DataLightning.Core
 {
     public interface ISubscribable<T>
     {

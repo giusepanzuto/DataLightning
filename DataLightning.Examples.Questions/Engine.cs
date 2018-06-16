@@ -1,53 +1,76 @@
 ﻿using DataLightning.Core;
 using DataLightning.Core.Operators;
 using DataLightning.Examples.Questions.Model;
-using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace DataLightning.Examples.Questions
 {
     public class Engine
     {
-        private readonly IOutputWriter _outputWriter;
-        private readonly GenericCalcUnit<Question, Question> _questions;
-        private readonly GenericCalcUnit<Answer, Answer> _answers;
+        private readonly PassThroughUnit<Question> _questions;
+        private readonly PassThroughUnit<Answer> _answers;
+        private readonly PassThroughUnit<User> _users;
 
         private int _maxQuestionId = 0;
         private int _maxAnswerId = 0;
+        private int _maxUserId = 0;
 
-        public Engine(IOutputWriter outputWriter)
+        public Engine(IQaApiPublisher qaApiPublisher)
         {
-            _questions = new GenericCalcUnit<Question, Question>(new[] { "Q" }, args => args.Values.Single());
-            _answers = new GenericCalcUnit<Answer, Answer>(new[] { "A" }, args => args.Values.Single());
+            _questions = new PassThroughUnit<Question>();
+            _answers = new PassThroughUnit<Answer>();
+            _users = new PassThroughUnit<User>();
 
-            var join = new Join<Question, Answer>(_questions, _answers,
-                q => q.Id,
-                a => a.QuestionId);
+            var qaJoin = new Join<Question, Answer>(_questions, _answers, q => q.Id, a => a.QuestionId);
 
-            var maxQ = new MaxId<Question>(_questions, q => q.Id);
-            maxQ.Subscribe(new CallbackSubcriber<int>(v => _maxQuestionId = v));
+            var uqJoin = new Join<User, Question>(_users, _questions, u => u.Id, q => q.UserId);
+            var uaJoin = new Join<User, Answer>(_users, _answers, u => u.Id, a => a.UserId);
 
-            var maxA = new MaxId<Answer>(_answers, a => a.Id);
-            maxA.Subscribe(new CallbackSubcriber<int>(v => _maxAnswerId = v));
-            _outputWriter = outputWriter;
+            _questions.Subscribe(new CallbackSubcriber<Question>(q => _maxQuestionId = Math.Max(_maxQuestionId, q.Id)));
+            _answers.Subscribe(new CallbackSubcriber<Answer>(a => _maxAnswerId = Math.Max(_maxAnswerId, a.Id)));
+            _users.Subscribe(new CallbackSubcriber<User>(u => _maxUserId = Math.Max(_maxUserId, u.Id)));
 
-            var output = new OutputContentMaker(join);
-            output.Subscribe(new CallbackSubcriber<OutputContent>(content => outputWriter.Push(
-                content.QuestionId,
-                JsonConvert.SerializeObject(content))));
+            new QaApiContentMaker(qaJoin).Subscribe(new CallbackSubcriber<QaApiContent>(qaApiPublisher.Publish));
         }
 
-        public int AddQuestion(string text)
+        public int AddUser(string userName)
         {
-            Question question = new Question { Id = _maxQuestionId + 1, Text = text };
-            _questions.Inputs["Q"].Submit(question);
+            User user = new User
+            {
+                Id = _maxUserId + 1,
+                UserName = userName
+            };
+
+            _users.Input.Submit(user);
+            return user.Id;
+        }
+
+        public int AddQuestion(int userId, string text)
+        {
+            Question question = new Question
+            {
+                Id = _maxQuestionId + 1,
+                UserId = userId,
+                Text = text
+            };
+
+            _questions.Input.Submit(question);
             return question.Id;
         }
 
-        public int AddAnswer(int questionId, string text)
+        public int AddAnswer(int questionId, int userId, string text)
         {
-            Answer answer = new Answer { Id = _maxAnswerId + 1, QuestionId = questionId, Text = text };
-            _answers.Inputs["A"].Submit(answer);
+            Answer answer = new Answer
+            {
+                Id = _maxAnswerId + 1,
+                UserId = userId,
+                QuestionId = questionId,
+                Text = text
+            };
+
+            _answers.Input.Submit(answer);
             return answer.Id;
         }
     }
