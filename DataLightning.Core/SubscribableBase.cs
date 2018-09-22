@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using Orleans;
+using System.Collections.Generic;
 
 namespace DataLightning.Core
 {
-    public abstract class SubscribableBase<T> : ISubscribable<T>
+    public abstract class SubscribableBase<T> : Grain, ISubscribable<T>
     {
         private readonly IList<ISubscriber<T>> _subscribers = new List<ISubscriber<T>>();
 

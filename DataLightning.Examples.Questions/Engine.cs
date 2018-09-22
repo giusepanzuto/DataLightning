@@ -1,6 +1,8 @@
 ﻿using DataLightning.Core;
 using DataLightning.Core.Operators;
 using DataLightning.Examples.Questions.Model;
+using Orleans;
+using Orleans.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,31 +11,30 @@ namespace DataLightning.Examples.Questions
 {
     public class Engine
     {
-        private readonly PassThroughUnit<Question> _questions;
-        private readonly PassThroughUnit<Answer> _answers;
-        private readonly PassThroughUnit<User> _users;
-
+        private IClusterClient _client;
         private int _maxQuestionId = 0;
         private int _maxAnswerId = 0;
         private int _maxUserId = 0;
 
         public Engine(IQaApiPublisher qaApiPublisher)
         {
-            _questions = new PassThroughUnit<Question>();
-            _answers = new PassThroughUnit<Answer>();
-            _users = new PassThroughUnit<User>();
+            StartOrleansClient();
 
-            _questions.Subscribe(new CallbackSubcriber<Question>(q => _maxQuestionId = Math.Max(_maxQuestionId, q.Id)));
-            _answers.Subscribe(new CallbackSubcriber<Answer>(a => _maxAnswerId = Math.Max(_maxAnswerId, a.Id)));
-            _users.Subscribe(new CallbackSubcriber<User>(u => _maxUserId = Math.Max(_maxUserId, u.Id)));
+            var questions = _client.GetGrain<IPassThroughUnit<Question>>("questions");
+            var answers = _client.GetGrain<IPassThroughUnit<Answer>>("answers");
+            var users = _client.GetGrain<IPassThroughUnit<User>>("users");
 
-            var qaJoin = new Join<Question, Answer>(_questions, _answers, q => q.Id, a => a.QuestionId);
+            questions.Subscribe(new CallbackSubcriber<Question>(q => _maxQuestionId = Math.Max(_maxQuestionId, q.Id)));
+            answers.Subscribe(new CallbackSubcriber<Answer>(a => _maxAnswerId = Math.Max(_maxAnswerId, a.Id)));
+            users.Subscribe(new CallbackSubcriber<User>(u => _maxUserId = Math.Max(_maxUserId, u.Id)));
+
+            var qaJoin = new Join<Question, Answer>(questions, answers, q => q.Id, a => a.QuestionId);
             new QaApiContentMaker(qaJoin).Subscribe(new CallbackSubcriber<QaApiContent>(qaApiPublisher.Publish));
 
             var userStatistics = new MultiJoin(
-                new JoinDefinitionAdapter<User>(_users, "User", u => u.Id),
-                new JoinDefinitionAdapter<Question>(_questions, "Questions", q => q.UserId),
-                new JoinDefinitionAdapter<Answer>(_answers, "Answers", a => a.UserId));
+                new JoinDefinitionAdapter<User>(users, "User", u => u.Id),
+                new JoinDefinitionAdapter<Question>(questions, "Questions", q => q.UserId),
+                new JoinDefinitionAdapter<Answer>(answers, "Answers", a => a.UserId));
 
             var statMapper = new Mapper<IDictionary<string, IList<object>>, UserStatistic>(userStatistics, data =>
             {
@@ -51,6 +52,32 @@ namespace DataLightning.Examples.Questions
             statMapper.Subscribe(new CallbackSubcriber<UserStatistic>(s => s?.ToString()));
         }
 
+        private void StartOrleansClient()
+        {
+            var clientBuilder = new ClientBuilder()
+              .UseLocalhostClustering()
+              .Configure<ClusterOptions>(options =>
+              {
+                  options.ClusterId = "dev";
+                  options.ServiceId = "Orleans2GettingStarted";
+              });
+
+            _client = clientBuilder.Build();
+
+            _client.Connect().GetAwaiter().GetResult();
+
+            //var random = new Random();
+            //string sky = "blue";
+
+            //while (sky == "blue") // if run in Ireland, it exits loop immediately
+            //{
+            //    int grainId = random.Next(0, 500);
+            //    double temperature = random.NextDouble() * 40;
+            //    var sensor = _client.GetGrain<ITemperatureSensorGrain>(grainId);
+            //    await sensor.SubmitTemperatureAsync((float)temperature);
+            //}
+        }
+
         public int AddUser(string userName)
         {
             User user = new User
@@ -59,7 +86,9 @@ namespace DataLightning.Examples.Questions
                 UserName = userName
             };
 
-            _users.Push(user);
+            var users = _client.GetGrain<IPassThroughUnit<User>>("users");
+            users.Push(user);
+
             return user.Id;
         }
 
@@ -72,7 +101,8 @@ namespace DataLightning.Examples.Questions
                 Text = text
             };
 
-            _questions.Push(question);
+            var questions = _client.GetGrain<IPassThroughUnit<Question>>("questions");
+            questions.Push(question);
             return question.Id;
         }
 
@@ -86,7 +116,8 @@ namespace DataLightning.Examples.Questions
                 Text = text
             };
 
-            _answers.Push(answer);
+            var answers = _client.GetGrain<IPassThroughUnit<Answer>>("answers");
+            answers.Push(answer);
             return answer.Id;
         }
     }
