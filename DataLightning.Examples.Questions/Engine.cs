@@ -59,60 +59,35 @@ namespace DataLightning.Examples.Questions
             statMapper.Subscribe(new CallbackSubcriber<UserStatistic>(s => s?.ToString()));
         }
 
-        public int AddUser(string userName)
+        public void UpsertQuestion(long version, Question question)
         {
-            User user = new User
-            {
-                Id = _maxUserId + 1,
-                UserName = userName
-            };
-
-            _users.Push(user);
-            return user.Id;
-        }
-
-        public int AddQuestion(int userId, string text)
-        {
-            Question question = new Question
-            {
-                Id = _maxQuestionId + 1,
-                UserId = userId,
-                Text = text
-            };
-
-            _questions.Push(question);
-            return question.Id;
-        }
-
-        public void UpsertQuestion(int questionId, long version, int userId, string text)
-        {
-            if(_questionVersionGuard.ContainsKey(questionId) && _questionVersionGuard[questionId] >= version)
+            if(_questionVersionGuard.ContainsKey(question.Id) && _questionVersionGuard[question.Id] >= version)
                 return;
 
-            _questionVersionGuard[questionId] = version;
-
-            Question question = new Question
-            {
-                Id = questionId,
-                UserId = userId,
-                Text = text
-            };
+            _questionVersionGuard[question.Id] = version;
 
             _questions.Push(question);
         }
 
-        public int AddAnswer(int questionId, int userId, string text)
+        public void UpsertUser(long version, User user)
         {
-            Answer answer = new Answer
-            {
-                Id = _maxAnswerId + 1,
-                UserId = userId,
-                QuestionId = questionId,
-                Text = text
-            };
+            if(_userVersionGuard.ContainsKey(user.Id) && _userVersionGuard[user.Id] >= version)
+                return;
+
+            _userVersionGuard[user.Id] = version;
+
+            _users.Push(user);
+        }
+
+
+        public void UpsertAnswer(long version, Answer answer)
+        {
+            if (_answerVersionGuard.ContainsKey(answer.Id) && _answerVersionGuard[answer.Id] >= version)
+                return;
+
+            _answerVersionGuard[answer.Id] = version;
 
             _answers.Push(answer);
-            return answer.Id;
         }
     }
 }

@@ -22,27 +22,26 @@ namespace DataLightning.Examples.Questions.Tests
         }
 
         [Fact]
-        public void ShouldReturnTheRightId()
-        {
-            var qId = _sut.AddQuestion(0, "How to build a solution?");
-
-            _sut.AddAnswer(qId, 0, "Press F6");
-            _sut.AddAnswer(qId, 0, "Right click on solution and then click Build.");
-
-            _lastResult.QuestionId.Should().BeEquivalentTo(qId.ToString());
-        }
-
-        [Fact]
         public void UpdateQuestionText()
         {
             const int qId = 1;
 
-            _sut.UpsertQuestion(qId, 1, 0, "How to build a project?");
+            _sut.UpsertQuestion(1, new Question
+            {
+                Id = qId,
+                Text = "How to build a project?",
+                UserId = 0
+            });
 
-            _sut.AddAnswer(qId, 0, "Press F6");
-            _sut.AddAnswer(qId, 0, "Right click on solution and then click Build.");
+            _sut.UpsertAnswer(1, new Answer{Id = 1, Text = "Press F6", QuestionId = qId, UserId = 1});
+            _sut.UpsertAnswer(1, new Answer{Id = 2, Text = "Right click on solution and then click Build.", QuestionId = qId, UserId = 1});
 
-            _sut.UpsertQuestion(qId, 2, 0, "How to build a solution?");
+            _sut.UpsertQuestion(2, new Question
+            {
+                Id = qId,
+                Text = "How to build a solution?",
+                UserId = 0
+            });
 
             var expected = new QaApiContent
             {
@@ -62,20 +61,30 @@ namespace DataLightning.Examples.Questions.Tests
         {
             const int qId = 1;
 
-            _sut.UpsertQuestion(qId, 2, 0, "question v2");
+            _sut.UpsertQuestion(2, new Question
+            {
+                Id = qId,
+                Text = "How to build a project?",
+                UserId = 0
+            });
 
-            _sut.AddAnswer(qId, 0, "a1");
-            _sut.AddAnswer(qId, 0, "a2");
+            _sut.UpsertAnswer(1, new Answer{Id = 1, Text = "Press F6", QuestionId = qId, UserId = 1});
+            _sut.UpsertAnswer(1, new Answer{Id = 2, Text = "Right click on solution and then click Build.", QuestionId = qId, UserId = 1});
 
-            _sut.UpsertQuestion(qId, 1, 0, "oldest one");
+            _sut.UpsertQuestion(1, new Question
+            {
+                Id = qId,
+                Text = "How to build a solution?",
+                UserId = 0
+            });
 
             var expected = new QaApiContent
             {
                 QuestionId = qId.ToString(),
-                Question = "question v2",
+                Question = "How to build a project?",
                 Answers = new List<string>{
-                    "a1",
-                    "a2"
+                    "Press F6",
+                    "Right click on solution and then click Build."
                 }
             };
 
