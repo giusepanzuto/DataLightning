@@ -34,7 +34,13 @@ namespace DataLightning.Core.Tests.Unit
             _sut.Subscribe(subscriptorMock.Object);
 
             _input1.Push(2);
+
+            Assert.Equal(2, result);
+            
             _input2.Push(3);
+            
+            Assert.Equal(5, result);
+            
             _input3.Push(5);
 
             Assert.Equal(10, result);
@@ -50,6 +56,7 @@ namespace DataLightning.Core.Tests.Unit
             _input1.Push(1);
 
             subscriptorMock.Verify(s => s.Push(It.IsAny<int>()), Times.Once);
+            subscriptorMock.Verify(s => s.Push(It.Is<int>(arg => arg == 1)), Times.Once);
         }
 
         [Fact]
