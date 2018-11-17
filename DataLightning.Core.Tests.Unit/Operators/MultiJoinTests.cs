@@ -1,4 +1,5 @@
-﻿using DataLightning.Core.Operators;
+﻿using System;
+using DataLightning.Core.Operators;
 using FluentAssertions;
 using System.Collections.Generic;
 using Xunit;
@@ -21,9 +22,9 @@ namespace DataLightning.Core.Tests.Unit.Operators
             _inputC = new PassThroughUnit<TestEntityC>();
 
             _sut = new MultiJoin(
-                new JoinDefinitionAdapter<TestEntityA>(_inputA, "A", e => e.KeyA, e => e.KeyA),
-                new JoinDefinitionAdapter<TestEntityB>(_inputB, "B", e => e.KeyB, e => e.KeyB),
-                new JoinDefinitionAdapter<TestEntityC>(_inputC, "C", e => e.KeyC, e => e.KeyC));
+                new JoinDefinitionAdapter<TestEntityA>(_inputA, "A", e => e.KeyA, _ => Guid.NewGuid()),
+                new JoinDefinitionAdapter<TestEntityB>(_inputB, "B", e => e.KeyB, _ => Guid.NewGuid()),
+                new JoinDefinitionAdapter<TestEntityC>(_inputC, "C", e => e.KeyC, _ => Guid.NewGuid()));
 
             var resultInspector = new CallbackSubcriber<IDictionary<string, IList<object>>>(r => _result = r);
 
