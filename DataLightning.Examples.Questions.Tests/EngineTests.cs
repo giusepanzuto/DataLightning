@@ -35,12 +35,14 @@ namespace DataLightning.Examples.Questions.Tests
         [Fact]
         public void UpdateQuestionText()
         {
-            var qId = _sut.AddQuestion(0, "How to build a project?");
+            var qId = 1;
+
+            _sut.UpsertQuestion(qId, 1, 0, "How to build a project?");
 
             _sut.AddAnswer(qId, 0, "Press F6");
             _sut.AddAnswer(qId, 0, "Right click on solution and then click Build.");
 
-            _sut.UpdateQuestion(qId, 0, "How to build a solution?");
+            _sut.UpsertQuestion(qId, 2, 0, "How to build a solution?");
 
             var expected = new QaApiContent
             {
@@ -54,5 +56,31 @@ namespace DataLightning.Examples.Questions.Tests
 
             _lastResult.Should().BeEquivalentTo(expected);
         }
+
+        [Fact]
+        public void SkipUpdateQuestionWhenOlder()
+        {
+            var qId = 1;
+
+            _sut.UpsertQuestion(qId, 2, 0, "question v2");
+
+            _sut.AddAnswer(qId, 0, "a1");
+            _sut.AddAnswer(qId, 0, "a2");
+
+            _sut.UpsertQuestion(qId, 1, 0, "oldest one");
+
+            var expected = new QaApiContent
+            {
+                QuestionId = qId.ToString(),
+                Question = "question v2",
+                Answers = new List<string>{
+                    "a1",
+                    "a2"
+                }
+            };
+
+            _lastResult.Should().BeEquivalentTo(expected);
+        }
+
     }
 }

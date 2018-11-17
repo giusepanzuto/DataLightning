@@ -13,6 +13,10 @@ namespace DataLightning.Examples.Questions
         private readonly PassThroughUnit<Answer> _answers;
         private readonly PassThroughUnit<User> _users;
 
+        private readonly Dictionary<int, long> _userVersionGuard = new Dictionary<int, long>();
+        private readonly Dictionary<int, long> _questionVersionGuard = new Dictionary<int, long>();
+        private readonly Dictionary<int, long> _answerVersionGuard = new Dictionary<int, long>();
+
         private int _maxQuestionId = 0;
         private int _maxAnswerId = 0;
         private int _maxUserId = 0;
@@ -28,7 +32,7 @@ namespace DataLightning.Examples.Questions
             _users.Subscribe(new CallbackSubcriber<User>(u => _maxUserId = Math.Max(_maxUserId, u.Id)));
 
             var qaJoin = new Join<Question, Answer>(
-                _questions, _answers, 
+                _questions, _answers,
                 q => q.Id, a => a.QuestionId,
                 q => q.Id, a => a.Id);
 
@@ -80,8 +84,13 @@ namespace DataLightning.Examples.Questions
             return question.Id;
         }
 
-        public int UpdateQuestion(int questionId, int userId, string text)
+        public void UpsertQuestion(int questionId, long version, int userId, string text)
         {
+            if(_questionVersionGuard.ContainsKey(questionId) && _questionVersionGuard[questionId] >= version)
+                return;
+
+            _questionVersionGuard[questionId] = version;
+
             Question question = new Question
             {
                 Id = questionId,
@@ -90,9 +99,7 @@ namespace DataLightning.Examples.Questions
             };
 
             _questions.Push(question);
-            return question.Id;
         }
-
 
         public int AddAnswer(int questionId, int userId, string text)
         {
