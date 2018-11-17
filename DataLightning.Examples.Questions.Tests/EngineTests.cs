@@ -35,7 +35,7 @@ namespace DataLightning.Examples.Questions.Tests
         [Fact]
         public void UpdateQuestionText()
         {
-            var qId = 1;
+            const int qId = 1;
 
             _sut.UpsertQuestion(qId, 1, 0, "How to build a project?");
 
@@ -60,7 +60,7 @@ namespace DataLightning.Examples.Questions.Tests
         [Fact]
         public void SkipUpdateQuestionWhenOlder()
         {
-            var qId = 1;
+            const int qId = 1;
 
             _sut.UpsertQuestion(qId, 2, 0, "question v2");
 
