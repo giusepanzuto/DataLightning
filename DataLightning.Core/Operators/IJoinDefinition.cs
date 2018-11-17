@@ -5,5 +5,7 @@
         string Name { get; }
 
         object GetJoinKey(object entity);
+
+        object GetEntityKey(object entity);
     }
 }

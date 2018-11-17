@@ -27,13 +27,17 @@ namespace DataLightning.Examples.Questions
             _answers.Subscribe(new CallbackSubcriber<Answer>(a => _maxAnswerId = Math.Max(_maxAnswerId, a.Id)));
             _users.Subscribe(new CallbackSubcriber<User>(u => _maxUserId = Math.Max(_maxUserId, u.Id)));
 
-            var qaJoin = new Join<Question, Answer>(_questions, _answers, q => q.Id, a => a.QuestionId);
+            var qaJoin = new Join<Question, Answer>(
+                _questions, _answers, 
+                q => q.Id, a => a.QuestionId,
+                q => q.Id, a => a.Id);
+
             new QaApiContentMaker(qaJoin).Subscribe(new CallbackSubcriber<QaApiContent>(qaApiPublisher.Publish));
 
             var userStatistics = new MultiJoin(
-                new JoinDefinitionAdapter<User>(_users, "User", u => u.Id),
-                new JoinDefinitionAdapter<Question>(_questions, "Questions", q => q.UserId),
-                new JoinDefinitionAdapter<Answer>(_answers, "Answers", a => a.UserId));
+                new JoinDefinitionAdapter<User>(_users, "User", u => u.Id, u => u.Id),
+                new JoinDefinitionAdapter<Question>(_questions, "Questions", q => q.UserId, q => q.Id),
+                new JoinDefinitionAdapter<Answer>(_answers, "Answers", a => a.UserId, a => a.Id));
 
             var statMapper = new Mapper<IDictionary<string, IList<object>>, UserStatistic>(userStatistics, data =>
             {
@@ -75,6 +79,20 @@ namespace DataLightning.Examples.Questions
             _questions.Push(question);
             return question.Id;
         }
+
+        public int UpdateQuestion(int questionId, int userId, string text)
+        {
+            Question question = new Question
+            {
+                Id = questionId,
+                UserId = userId,
+                Text = text
+            };
+
+            _questions.Push(question);
+            return question.Id;
+        }
+
 
         public int AddAnswer(int questionId, int userId, string text)
         {

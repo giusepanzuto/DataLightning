@@ -8,18 +8,17 @@ namespace DataLightning.Examples.Questions.Tests
 {
     public class EngineTests
     {
-        private readonly Mock<IQaApiPublisher> _outputWriterMock;
         private readonly Engine _sut;
 
         private QaApiContent _lastResult;
 
         public EngineTests()
         {
-            _outputWriterMock = new Mock<IQaApiPublisher>();
-            _outputWriterMock.Setup(o => o.Publish(It.IsAny<QaApiContent>()))
+            var outputWriterMock = new Mock<IQaApiPublisher>();
+            outputWriterMock.Setup(o => o.Publish(It.IsAny<QaApiContent>()))
                 .Callback<QaApiContent>(content => _lastResult = content);
 
-            _sut = new Engine(_outputWriterMock.Object);
+            _sut = new Engine(outputWriterMock.Object);
         }
 
         [Fact]
@@ -34,12 +33,14 @@ namespace DataLightning.Examples.Questions.Tests
         }
 
         [Fact]
-        public void ShouldReturnTheRightContent()
+        public void UpdateQuestionText()
         {
-            var qId = _sut.AddQuestion(0, "How to build a solution?");
+            var qId = _sut.AddQuestion(0, "How to build a project?");
 
             _sut.AddAnswer(qId, 0, "Press F6");
             _sut.AddAnswer(qId, 0, "Right click on solution and then click Build.");
+
+            _sut.UpdateQuestion(qId, 0, "How to build a solution?");
 
             var expected = new QaApiContent
             {
