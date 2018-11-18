@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace DataLightning.Examples.Questions.Gateway.Lock
 {
-    internal class ZooKeeperWatcher : Watcher
+    public class ZooKeeperWatcher : Watcher
     {
         public override Task process(WatchedEvent @event)
         {

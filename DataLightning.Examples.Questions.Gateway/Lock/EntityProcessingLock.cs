@@ -15,17 +15,11 @@ namespace DataLightning.Examples.Questions.Gateway.Lock
 
         public async Task<bool> LockAsync<T>(int entityId)
         {
-            //await _zk.createAsync(
-            //    $"/EntityProcessingLock",
-            //    null,
-            //    ZooDefs.Ids.OPEN_ACL_UNSAFE,
-            //    CreateMode.PERSISTENT);
+            if(await _zk.existsAsync("/EntityProcessingLock") == null)
+                await _zk.createAsync("/EntityProcessingLock", null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 
-            //await _zk.createAsync(
-            //    $"/EntityProcessingLock/{typeof(T).Name}",
-            //    null,
-            //    ZooDefs.Ids.OPEN_ACL_UNSAFE,
-            //    CreateMode.PERSISTENT);
+            if(await _zk.existsAsync($"/EntityProcessingLock/{typeof(T).Name}") == null)
+                await _zk.createAsync($"/EntityProcessingLock/{typeof(T).Name}", null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
 
             var lockPath = await _zk.createAsync(
                 $"/EntityProcessingLock/{typeof(T).Name}/ID{entityId}",

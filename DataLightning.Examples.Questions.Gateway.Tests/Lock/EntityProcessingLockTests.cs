@@ -10,6 +10,7 @@ namespace DataLightning.Examples.Questions.Gateway.Tests.Lock
     public class EntityProcessingLockTests : IDisposable
     {
         private readonly DockerEnvironment _environment;
+        private readonly EntityProcessingLock _sut;
 
         public EntityProcessingLockTests()
         {
@@ -18,6 +19,12 @@ namespace DataLightning.Examples.Questions.Gateway.Tests.Lock
                 .Build();
 
             _environment.Up().GetAwaiter().GetResult();
+
+            var zk = _environment.GetContainer("zk-test");
+
+            Task.Delay(TimeSpan.FromMilliseconds(1000)).GetAwaiter().GetResult();
+
+            _sut = new EntityProcessingLock($"127.0.0.1:{zk.Ports[2181]}");
         }
 
         public void Dispose()
@@ -29,9 +36,7 @@ namespace DataLightning.Examples.Questions.Gateway.Tests.Lock
         [Fact]
         public async Task ObtainLock()
         {
-            var sut = new EntityProcessingLock("127.0.0.1:2181");
-
-            var result = await sut.LockAsync<string>(2);
+            var result = await _sut.LockAsync<string>(2);
 
             result.Should().BeTrue();
         }
@@ -39,11 +44,9 @@ namespace DataLightning.Examples.Questions.Gateway.Tests.Lock
         [Fact]
         public async Task FailLockOnAlreadyLockedEntity()
         {
-            var sut = new EntityProcessingLock("127.0.0.1:2181");
-
-            await sut.LockAsync<string>(2);
+            await _sut.LockAsync<string>(2);
             
-            var result = await sut.LockAsync<string>(2);
+            var result = await _sut.LockAsync<string>(2);
 
             result.Should().BeFalse();
         }
