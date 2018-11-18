@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DataLightning.Core\DataLightning.Core.csproj" />
+    <ProjectReference Include="..\DataLightning.Examples.Questions.Gateway\DataLightning.Examples.Questions.Gateway.csproj" />
   </ItemGroup>
 
   <ItemGroup>

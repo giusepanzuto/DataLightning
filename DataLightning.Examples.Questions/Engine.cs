@@ -61,7 +61,7 @@ namespace DataLightning.Examples.Questions
 
         public void UpsertQuestion(long version, Question question)
         {
-            if(_questionVersionGuard.ContainsKey(question.Id) && _questionVersionGuard[question.Id] >= version)
+            if (_questionVersionGuard.ContainsKey(question.Id) && _questionVersionGuard[question.Id] >= version)
                 return;
 
             _questionVersionGuard[question.Id] = version;
@@ -71,14 +71,13 @@ namespace DataLightning.Examples.Questions
 
         public void UpsertUser(long version, User user)
         {
-            if(_userVersionGuard.ContainsKey(user.Id) && _userVersionGuard[user.Id] >= version)
+            if (_userVersionGuard.ContainsKey(user.Id) && _userVersionGuard[user.Id] >= version)
                 return;
 
             _userVersionGuard[user.Id] = version;
 
             _users.Push(user);
         }
-
 
         public void UpsertAnswer(long version, Answer answer)
         {

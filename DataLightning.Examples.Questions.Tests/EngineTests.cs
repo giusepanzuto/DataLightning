@@ -33,8 +33,8 @@ namespace DataLightning.Examples.Questions.Tests
                 UserId = 0
             });
 
-            _sut.UpsertAnswer(1, new Answer{Id = 1, Text = "Press F6", QuestionId = qId, UserId = 1});
-            _sut.UpsertAnswer(1, new Answer{Id = 2, Text = "Right click on solution and then click Build.", QuestionId = qId, UserId = 1});
+            _sut.UpsertAnswer(1, new Answer { Id = 1, Text = "Press F6", QuestionId = qId, UserId = 1 });
+            _sut.UpsertAnswer(1, new Answer { Id = 2, Text = "Right click on solution and then click Build.", QuestionId = qId, UserId = 1 });
 
             _sut.UpsertQuestion(2, new Question
             {
@@ -68,8 +68,8 @@ namespace DataLightning.Examples.Questions.Tests
                 UserId = 0
             });
 
-            _sut.UpsertAnswer(1, new Answer{Id = 1, Text = "Press F6", QuestionId = qId, UserId = 1});
-            _sut.UpsertAnswer(1, new Answer{Id = 2, Text = "Right click on solution and then click Build.", QuestionId = qId, UserId = 1});
+            _sut.UpsertAnswer(1, new Answer { Id = 1, Text = "Press F6", QuestionId = qId, UserId = 1 });
+            _sut.UpsertAnswer(1, new Answer { Id = 2, Text = "Right click on solution and then click Build.", QuestionId = qId, UserId = 1 });
 
             _sut.UpsertQuestion(1, new Question
             {
@@ -90,6 +90,5 @@ namespace DataLightning.Examples.Questions.Tests
 
             _lastResult.Should().BeEquivalentTo(expected);
         }
-
     }
 }
