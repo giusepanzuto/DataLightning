@@ -22,7 +22,7 @@ namespace DataLightning.Examples.Questions.Gateway.Tests.Lock
 
             var zk = _environment.GetContainer("zk-test");
 
-            Task.Delay(TimeSpan.FromMilliseconds(1000)).GetAwaiter().GetResult();
+            Task.Delay(TimeSpan.FromSeconds(1)).GetAwaiter().GetResult();
 
             _sut = new EntityProcessingLock($"127.0.0.1:{zk.Ports[2181]}");
         }
@@ -38,7 +38,7 @@ namespace DataLightning.Examples.Questions.Gateway.Tests.Lock
         {
             var result = await _sut.LockAsync<string>(2);
 
-            result.Should().BeTrue();
+            result.Should().NotBeNullOrEmpty();
         }
 
         [Fact]
@@ -48,7 +48,28 @@ namespace DataLightning.Examples.Questions.Gateway.Tests.Lock
             
             var result = await _sut.LockAsync<string>(2);
 
-            result.Should().BeFalse();
+            result.Should().BeNullOrEmpty();
+        }
+
+        [Fact]
+        public async Task ReleaseLock()
+        {
+            var lockObject = await _sut.LockAsync<string>(2);
+
+            await _sut.ReleaseLock(lockObject);
+        }
+
+
+        [Fact]
+        public async Task ObtainLockAfterReleasedLock()
+        {
+            var lockPath = await _sut.LockAsync<string>(2);
+
+            await _sut.ReleaseLock(lockPath);
+
+            var result = await _sut.LockAsync<string>(2);
+
+            result.Should().NotBeNullOrEmpty();
         }
 
     }

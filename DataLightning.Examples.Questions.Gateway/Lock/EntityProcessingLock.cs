@@ -13,13 +13,9 @@ namespace DataLightning.Examples.Questions.Gateway.Lock
             _zk = new ZooKeeper(connectionString, 3000, new ZooKeeperWatcher());
         }
 
-        public async Task<bool> LockAsync<T>(int entityId)
+        public async Task<string> LockAsync<T>(int entityId)
         {
-            if(await _zk.existsAsync("/EntityProcessingLock") == null)
-                await _zk.createAsync("/EntityProcessingLock", null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-
-            if(await _zk.existsAsync($"/EntityProcessingLock/{typeof(T).Name}") == null)
-                await _zk.createAsync($"/EntityProcessingLock/{typeof(T).Name}", null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+            await CreateBasePath<T>();
 
             var lockPath = await _zk.createAsync(
                 $"/EntityProcessingLock/{typeof(T).Name}/ID{entityId}",
@@ -32,7 +28,21 @@ namespace DataLightning.Examples.Questions.Gateway.Lock
 
             var lockOwner = nodes.Children.OrderBy(c => c).First();
 
-            return lockPath == $"{basePath}/{lockOwner}";
+            return lockPath == $"{basePath}/{lockOwner}" ? lockPath : null;
+        }
+
+        private async Task CreateBasePath<T>()
+        {
+            if (await _zk.existsAsync("/EntityProcessingLock") == null)
+                await _zk.createAsync("/EntityProcessingLock", null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+
+            if (await _zk.existsAsync($"/EntityProcessingLock/{typeof(T).Name}") == null)
+                await _zk.createAsync($"/EntityProcessingLock/{typeof(T).Name}", null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+        }
+
+        public async Task ReleaseLock(string lockPath)
+        {
+            await _zk.deleteAsync(lockPath);
         }
     }
 }
