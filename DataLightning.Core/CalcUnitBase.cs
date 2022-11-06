@@ -5,7 +5,7 @@ namespace DataLightning.Core
 {
     public abstract class CalcUnitBase<TInput, TOutput> : SubscribableBase<TOutput>
     {
-        private readonly Dictionary<object, IInput<TInput>> _inputs = new Dictionary<object, IInput<TInput>>();
+        private readonly Dictionary<object, IInput<TInput>> _inputs = new();
         private TOutput _outputValue;
 
         protected CalcUnitBase(IEnumerable<ISubscribable<TInput>> inputKeys)
@@ -29,7 +29,7 @@ namespace DataLightning.Core
             {
                 _outputValue = result;
 
-                PushToSubscribed(_outputValue);
+                PushToSubscribers(_outputValue);
             }
         }
 

@@ -10,9 +10,9 @@
 
         public ISubscribable<TSource> Adaptee { get; }
 
-        public ISubscription Subscribe(ISubscriber<TAdapted> subscriptor)
+        public ISubscription Subscribe(ISubscriber<TAdapted> subscriber)
         {
-            return Adaptee.Subscribe(new CallbackSubcriber<TSource>(value => subscriptor.Push(value)));
+            return Adaptee.Subscribe(new CallbackSubcriber<TSource>(value => subscriber.Push(value)));
         }
     }
 }

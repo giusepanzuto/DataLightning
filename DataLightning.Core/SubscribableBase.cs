@@ -4,15 +4,15 @@ namespace DataLightning.Core
 {
     public abstract class SubscribableBase<T> : ISubscribable<T>
     {
-        private readonly IList<ISubscriber<T>> _subscribers = new List<ISubscriber<T>>();
+        private readonly List<ISubscriber<T>> _subscribers = new();
 
-        public ISubscription Subscribe(ISubscriber<T> subscriptor)
+        public ISubscription Subscribe(ISubscriber<T> subscriber)
         {
-            _subscribers.Add(subscriptor);
-            return new Subscription<T>(_subscribers, subscriptor);
+            _subscribers.Add(subscriber);
+            return new Subscription<T>(_subscribers, subscriber);
         }
 
-        protected void PushToSubscribed(T value)
+        protected void PushToSubscribers(T value)
         {
             foreach (var s in _subscribers)
                 s.Push(value);
