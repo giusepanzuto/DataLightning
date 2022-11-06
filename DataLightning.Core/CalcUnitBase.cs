@@ -20,12 +20,12 @@ namespace DataLightning.Core
                 _inputManager.Add(string.Empty, key, (_, value) =>
                 {
                     _inputs[key] = value;
-                    Calculate2(key);
+                    Calculate(key);
                 });
             }
         }
 
-        private void Calculate2(object inputKey)
+        private void Calculate(object inputKey)
         {
             var result = Execute(_inputs, inputKey);
 
