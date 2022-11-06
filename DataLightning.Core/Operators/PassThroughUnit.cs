@@ -1,10 +1,16 @@
-﻿namespace DataLightning.Core.Operators
+﻿namespace DataLightning.Core.Operators;
+
+public class PassThroughUnit<T> : ISubscriber<T>, ISubscribable<T>
 {
-    public class PassThroughUnit<T> : SubscribableBase<T>, ISubscriber<T>
+    private readonly SubscriptionManager<T> _subscriptionManager = new();
+
+    public void Push(T value)
     {
-        public void Push(T value)
-        {
-            PushToSubscribers(value);
-        }
+        _subscriptionManager.NotifySubscribers(value);
+    }
+
+    public ISubscription Subscribe(ISubscriber<T> subscriber)
+    {
+        return _subscriptionManager.Subscribe(subscriber);
     }
 }

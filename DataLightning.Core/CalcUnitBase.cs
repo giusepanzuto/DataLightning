@@ -3,13 +3,16 @@ using System.Linq;
 
 namespace DataLightning.Core
 {
-    public abstract class CalcUnitBase<TInput, TOutput> : SubscribableBase<TOutput>
+    public abstract class CalcUnitBase<TInput, TOutput> : ISubscribable<TOutput>
     {
         private readonly Dictionary<object, IInput<TInput>> _inputs = new();
         private TOutput _outputValue;
+        private readonly SubscriptionManager<TOutput> _subscriptionManager;
 
         protected CalcUnitBase(IEnumerable<ISubscribable<TInput>> inputKeys)
         {
+            _subscriptionManager = new SubscriptionManager<TOutput>();
+
             foreach (var key in inputKeys)
             {
                 var input = new Input<TInput>(key);
@@ -29,7 +32,7 @@ namespace DataLightning.Core
             {
                 _outputValue = result;
 
-                PushToSubscribers(_outputValue);
+                _subscriptionManager.NotifySubscribers(_outputValue);
             }
         }
 
@@ -39,5 +42,8 @@ namespace DataLightning.Core
         {
             Calculate(((IInput<TInput>)sender).Key);
         }
+
+        public ISubscription Subscribe(ISubscriber<TOutput> subscriber) => 
+            _subscriptionManager.Subscribe(subscriber);
     }
 }
